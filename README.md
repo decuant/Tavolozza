@@ -13,16 +13,20 @@ The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0
 
 ### .1 **main.lua**
 
-- RYB palette
-- Hue variations.
-- Decreasing Saturation.
-- Luminance variations.
-- 10 tints.
+- ```RYB``` palette
+- ```Hue``` variations.
+- Decreasing ```Saturation```.
+- ```Luminance``` variations.
+- 10 ```Tints```.
 
 Selection of a foreground colour with the left mouse button, the background with the right mouse button.
 
+The controls on the main dialog.
+
 ![The actual tavolozza](/doc/Main_Dialog.png)
 
+
+The sketch dialog with most used wxWidgets controls.
 
 ![The sketch dialog](/doc/Test_Dialog.png)
 
