@@ -17,9 +17,11 @@ The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0
 - ```Hue``` variations.
 - Decreasing ```Saturation```.
 - ```Luminance``` variations.
-- 10 ```Tints```.
+- 18 ```Tints```.
 
 Selection of a foreground colour with the left mouse button, the background with the right mouse button.
+
+Choosing a color (except in Tints) will make it current and new HSL's variations displayed.
 
 The controls on the main dialog.
 
