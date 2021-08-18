@@ -14,10 +14,10 @@ The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0
 ### .1 **main.lua**
 
 
-![The actual tavolozza](/docs/Main_Dialog.png)
+![The actual tavolozza](/doc/Main_Dialog.png)
 
 
-![The test dialog](/docs/Test_Dialog.png)
+![The test dialog](/doc/Test_Dialog.png)
 
 
 
