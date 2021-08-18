@@ -5,7 +5,7 @@
 
 An application to test colours on a sketch dialog, this simplifies the creation of color schemes.
 
-The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0.0``` and ```luasocket 3.0-rc1```.
+The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0.0```.
 
 
 ## Modules
@@ -13,7 +13,7 @@ The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0
 
 ### .1 **main.lua**
 
-- ```RYB``` palette
+- ```RYB``` palette (the painters' palette).
 - ```Hue``` variations.
 - Decreasing ```Saturation```.
 - ```Luminance``` variations.
