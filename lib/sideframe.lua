@@ -158,7 +158,7 @@ local function OnSetIndex(inIndex)
 
 	local hFunCb = m_Sideframe.hFunCb
 
-	if 0 < inIndex and inIndex < #tCbFunctions then
+	if 0 < inIndex and inIndex <= #tCbFunctions then
 		
 		hFunCb:SetValue(tCbFunctions[inIndex])
 	end
