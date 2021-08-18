@@ -13,7 +13,7 @@ The application runs with ```Lua 5.4.3```, ```wxWidgets 3.1.5```, ```wxLua 3.1.0
 
 ### .1 **main.lua**
 
-The application uses the HSL colour representation.
+The application uses the HSL colour space.
 
 - ```RYB``` palette (the painters' palette).
 - ```Hue``` variations.
