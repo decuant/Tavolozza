@@ -8,11 +8,13 @@ local canvfctr 	= require("lib.canvas")
 local rybclr	= require("lib.RYBColours")
 local Pyramid	= require("lib.Pyramid")
 local Palette	= require("lib.Palette")
-local Slider	= require("lib.Slider")
+local Tints		= require("lib.Tints")
 local SideFrame	= require("lib.sideframe")
 local trace 	= require("lib.trace")
 
 local _frmt		= string.format
+local _floor	= math.floor
+
 local _colours	= rybclr.tColours
 local m_Sketch	= SideFrame
 
@@ -28,12 +30,13 @@ local m_App =
 	sAppName	= "Tavolozza",			-- name for the application
 	sRelDate 	= "2021/08/16",
 	
+	bLocked		= false,
 	tPalette	= nil,
 	tControls	= { },
 	tTints		= nil,
 	
-	tForeColour	= _colours.__Vermillion,
-	tBackColour	= _colours.__Teal,
+	tForeColour	= _colours.__Amber,
+	tBackColour	= _colours.Gray0,
 }
 
 _G.m_App = m_App						-- make it globally visible
@@ -43,19 +46,21 @@ _G.m_App = m_App						-- make it globally visible
 --
 local m_tDefWinProp =
 {
-	window_xy	= {20,	 20},						-- top, left
-	window_wh	= {990,	580},						-- width, height
-	use_font	= {12, "Calibri"},					-- font for grid and tab
+	window_xy	= {20,	 20},			-- top, left
+	window_wh	= {990,	580},			-- width, height
+	use_font	= {12, "Calibri"},		-- font for grid and tab
+	dpi_scale	= 1.0,					-- scaling
 }
 
 -- ----------------------------------------------------------------------------
 -- default controls' height
 --
-local m_tDefCtrlsH =
+local m_tSizes =
 {
 	iPyramid	= 300,
 	iPalette	= 125,
-	iTints		= 35
+	iTints		= 35,
+	iRadius		= 150,
 }
 
 -- ----------------------------------------------------------------------------
@@ -115,8 +120,11 @@ local function SaveSettings()
 	fd:write(sLine)
 
 	sLine = _frmt("\tuse_font\t= {%d, \"%s\"},\n", tWinProps.use_font[1], tWinProps.use_font[2])
-	fd:write(sLine)	
+	fd:write(sLine)
 
+	sLine = _frmt("\tdpi_scale\t= %.2f,\n", tWinProps.dpi_scale)
+	fd:write(sLine)	
+	
 	fd:write("}\n\nreturn window_ini\n")
 	io.close(fd)
 end
@@ -130,16 +138,19 @@ local function OnForeColourChanged(inColour, inFunction)
 	if not inColour then return end
 	m_trace:line("Current foreground: " .. inColour:toString())
 
-	if "Tints" ~= inFunction then
+	if not m_App.bLocked then
 		
-		m_App.tTints:SetColours(_colours.Gray0, inColour)
-	end
-
-	local tControls = m_App.tControls
-
-	for i=1, #tControls do
+		if "Tints" ~= inFunction then
+			
+			m_App.tTints:SetColours(inColour:rectus(), inColour)
+		end
 		
-		tControls[i]:SetColours(_colours.Gray0, inColour)
+		local tControls = m_App.tControls
+		
+		for i=1, #tControls do
+			
+			tControls[i]:SetColours(inColour:rectus(), inColour)
+		end
 	end
 
 	-- update the sketch dialog
@@ -162,6 +173,21 @@ local function OnBackColourChanged(inColour, inFunction)
 	if not inColour then return end
 	m_trace:line("Current background: " .. inColour:toString())
 	
+	if not m_App.bLocked then
+		
+		if "Tints" ~= inFunction then
+			
+			m_App.tTints:SetColours(inColour:rectus(), inColour)
+		end
+
+		local tControls = m_App.tControls
+
+		for i=1, #tControls do
+			
+			tControls[i]:SetColours(inColour:rectus(), inColour)
+		end
+	end
+
 	-- update the sketch dialog
 	--
 	m_Sketch.SetIndex(1)					-- make a choice
@@ -174,12 +200,75 @@ local function OnBackColourChanged(inColour, inFunction)
 end
 
 -- ----------------------------------------------------------------------------
+-- allows selection but dows not propagate it
+--
+local function OnEditLock()
+	
+	m_App.bLocked = not m_App.bLocked
+end
+
+-- ----------------------------------------------------------------------------
+-- 
+--
+local function OnEditProximi()
+	
+	local tResult = m_App.tForeColour:proximi(120.0)
+	local bLocked = m_App.bLocked
+	
+	m_App.bLocked = false
+	
+	OnBackColourChanged(tResult[1], "")
+	OnForeColourChanged(tResult[2], "")
+
+	m_App.bLocked = bLocked
+end
+
+-- ----------------------------------------------------------------------------
+-- 
+--
+local function OnEditTertii()
+	
+	local tResult = m_App.tForeColour:proximi(60.0)
+	
+	m_App.bLocked = false
+	
+	OnBackColourChanged(tResult[2], "")
+	OnForeColourChanged(tResult[1], "")
+
+	m_App.bLocked = bLocked
+end
+
+-- ----------------------------------------------------------------------------
 -- Simple interface to pop up a message
 --
-local function DlgMessage(message)
+local function DlgMessage(inMessage)
 
-	wx.wxMessageBox(message, m_App.sAppName,
+	wx.wxMessageBox(inMessage, m_App.sAppName,
 					wx.wxOK + wx.wxICON_INFORMATION, m_Mainframe.hWindow)
+end
+
+-- ----------------------------------------------------------------------------
+-- Generate a unique new wxWindowID
+--
+local ID_IDCOUNTER = wx.wxID_HIGHEST + 1
+local NewMenuID = function()
+	
+	ID_IDCOUNTER = ID_IDCOUNTER + 1
+	return ID_IDCOUNTER
+end
+
+-- ----------------------------------------------------------------------------
+--
+local function OnImport()
+--	m_logger:line("OnImport")
+
+end
+
+-- ----------------------------------------------------------------------------
+--
+local function OnSave()
+--	m_logger:line("OnSave")
+
 end
 
 -- ----------------------------------------------------------------------------
@@ -213,6 +302,7 @@ local function OnCloseMainframe()
 	tWinProps.window_xy = {pos:GetX(), pos:GetY()}
 	tWinProps.window_wh = {size:GetWidth(), size:GetHeight()}
 	tWinProps.use_font	= m_Mainframe.tWinProps.use_font				-- just copy over
+	tWinProps.dpi_scale	= m_Mainframe.tWinProps.dpi_scale				-- "	"	"	"
 	
 	m_Mainframe.tWinProps = tWinProps			-- switch structures
 
@@ -235,18 +325,20 @@ local function OnSize(event)
 		return 
 	end
 
-	local iRadius	= m_App.tControls[1].iRadius
+	local iRadius	= m_tSizes.iRadius
 	local iDiameter = iRadius * 2
 	local iSpace	= (sizeWin:GetWidth() - (iDiameter * 3)) / 4
 	local iOffset	= iSpace + iRadius
 	
 	for i, pyramid in next, m_App.tControls do
 		
-		pyramid:SetOrigin((iSpace + iDiameter) * (i - 1) + iOffset, m_tDefCtrlsH.iPyramid)
+		pyramid:SetOrigin((iSpace + iDiameter) * (i - 1) + iOffset, m_tSizes.iPyramid)
 	end
 
-	m_App.tPalette:SetSize(sizeWin:GetWidth(), m_tDefCtrlsH.iPalette)
-	m_App.tTints:SetSize(sizeWin:GetWidth(), m_tDefCtrlsH.iTints)
+	m_App.tPalette:SetSize(sizeWin:GetWidth(), m_tSizes.iPalette)
+	m_App.tTints:SetSize(sizeWin:GetWidth(), m_tSizes.iTints)
+	
+	m_App.tTints:SetTopLeft(0, sizeWin:GetHeight() - m_tSizes.iTints - 10)
 
 	event:Skip()	-- let the event fall through
 end
@@ -261,20 +353,31 @@ local function OnDPIChanged(event)
 end
 
 -- ----------------------------------------------------------------------------
+-- scale the default height of objects
+--
+local function Scale()
+	
+	local dScale = m_Mainframe.tWinProps.dpi_scale
+	
+	m_tSizes.iPyramid	= _floor(m_tSizes.iPyramid * dScale)
+	m_tSizes.iPalette	= _floor(m_tSizes.iPalette * dScale)
+	m_tSizes.iTints		= _floor(m_tSizes.iTints   * dScale)
+	m_tSizes.iRadius	= _floor(m_tSizes.iRadius  * dScale)
+end
+
+-- ----------------------------------------------------------------------------
 -- create a window
 --
 local function CreateMainFrame(inAppTitle)
 --	m_trace:line("CreateMainFrame")
 
 	ReadSettings()
+	Scale()
 
 	local tWinProps = m_Mainframe.tWinProps
 
 	local pos  = tWinProps.window_xy
 	local size = tWinProps.window_wh
-	
---	local iFontSize	= tWinProps.use_font[1]
---	local sFontname	= tWinProps.use_font[2]
 	
 	-- create the frame
 	--
@@ -282,16 +385,63 @@ local function CreateMainFrame(inAppTitle)
 							 wx.wxPoint(pos[1], pos[2]), wx.wxSize(size[1], size[2]))
 	frame:SetMinSize(wx.wxSize(300, 250))
 	
+	-- ------------------------------------------------------------------------
+	-- create the menus
+	--
+	local rcMnuImportFile	= NewMenuID()
+	local rcMnuSaveFile		= NewMenuID()
+	local rcMnuEdLock		= NewMenuID()
+	local rcMnuEdProximi	= NewMenuID()
+	local rcMnuEdTertii 	= NewMenuID()
+
+	local mnuFile = wx.wxMenu("", wx.wxMENU_TEAROFF)
+
+	mnuFile:Append(rcMnuImportFile,	"Import\tCtrl-I",	"Read the settings file")
+	mnuFile:Append(rcMnuSaveFile,	"Save\tCtrl-S",		"Write the settings file")
+	mnuFile:AppendSeparator()
+	mnuFile:Append(wx.wxID_EXIT,    "E&xit\tAlt-X",		"Quit the program")
+	
+	local mnuEdit = wx.wxMenu("", wx.wxMENU_TEAROFF)
+	mnuEdit:Append(rcMnuEdLock, 	"Lock\tCtrl-L",		"Locks current color palette")
+	mnuFile:AppendSeparator()
+	mnuEdit:Append(rcMnuEdProximi,	"Proximi\tCtrl-1",	"Proximi colours")
+	mnuEdit:Append(rcMnuEdTertii,	"Tertii\tCtrl-2",	"Tertii colours")
+	
+	local mnuHelp = wx.wxMenu("", wx.wxMENU_TEAROFF)
+	mnuHelp:Append(wx.wxID_ABOUT,    "&About",			"About the application")
+
+	-- create the menu bar and associate sub-menus
+	--
+	local mnuBar = wx.wxMenuBar()
+
+	mnuBar:Append(mnuFile,	"&File")
+	mnuBar:Append(mnuEdit,	"&Edit")
+	mnuBar:Append(mnuHelp,	"&Help")
+
+	frame:SetMenuBar(mnuBar)
+	
 	-- create the canvas
 	--
 	local canvas = canvfctr.New()
-	canvas:CreateCanvas(frame, 10, 10)
+	canvas:CreateCanvas(frame)
 
 	-- assign event handlers for this frame
 	--
 	frame:Connect(wx.wxEVT_SIZE,		 OnSize)
 	frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnCloseMainframe)
 	frame:Connect(wx.wxEVT_DPI_CHANGED,	 OnDPIChanged)
+	
+	-- menu event handlers
+	--
+	frame:Connect(rcMnuImportFile,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnImport)
+	frame:Connect(rcMnuSaveFile,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnSave)
+	
+	frame:Connect(rcMnuEdLock,		wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditLock)
+	frame:Connect(rcMnuEdProximi,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditProximi)
+	frame:Connect(rcMnuEdTertii,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditTertii)
+
+	frame:Connect(wx.wxID_EXIT,		wx.wxEVT_COMMAND_MENU_SELECTED, OnCloseMainframe)
+	frame:Connect(wx.wxID_ABOUT,	wx.wxEVT_COMMAND_MENU_SELECTED, OnAbout)
 	
 	-- assign an icon to frame
 	--
@@ -310,34 +460,22 @@ end
 --
 local function Layout()
 	
-	-- ----------------------------------------------------------------------------
+	local palette = Palette.New("Palette", 200, m_tSizes.iPalette)
+	
 	--
-	local function Setup()
-		
-		local rcRYB = Palette.New("Palette", 200, 125)
-		rcRYB:SetTopLeft(0, 0)
-		
-		local clrStart = _colours.__Vermillion
-		
-		--
-		-- inTitle, inRadius, inOctagons, inType
-		--
-		local pyramid1 = Pyramid.New("Offset", 		150, 3, 10)
-		local pyramid2 = Pyramid.New("Saturation",	150, 3, 4)
-		local pyramid3 = Pyramid.New("Luminance", 	150, 3, 8)
-
-		local rcSlide1 = Slider.New("Tints", 300, m_tDefCtrlsH.iTints)
-		rcSlide1:SetTopLeft(0, 475)
-		
-		m_App.tPalette	= rcRYB
-		m_App.tControls	= {pyramid1, pyramid2, pyramid3}
-		m_App.tTints	= rcSlide1
-		m_App.tForeColor= clrStart
-	end
-
-	-- compile and import functions
+	-- inTitle, inRadius, inOctagons, inType
 	--
-	Setup()
+	local pyramid1 = Pyramid.New("Offset", 		m_tSizes.iRadius, 3, 10)
+	local pyramid2 = Pyramid.New("Saturation",	m_tSizes.iRadius, 3, 4)
+	local pyramid3 = Pyramid.New("Luminance", 	m_tSizes.iRadius, 3, 8)
+	
+	local tints = Tints.New("Tints", 300, m_tSizes.iTints)
+	tints:SetTopLeft(0, 475)
+	
+	m_App.tPalette	= palette
+	m_App.tControls	= {pyramid1, pyramid2, pyramid3}
+	m_App.tTints	= tints
+
 
 	m_Mainframe.hCanvas:AddObject(m_App.tPalette)
 	m_Mainframe.hCanvas:AddObject(m_App.tTints)
