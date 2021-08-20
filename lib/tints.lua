@@ -52,7 +52,7 @@ function Tints.New(inFunction, inSizeX, inSizeY)
 		iTopY		= 0,
 		iSizeX		= inSizeX,
 		iSizeY		= inSizeY,
-		iSlices		= 16,
+		iSlices		= 18,
 		tVertices	= { },
 		
 		clrLines	= _colours.Gray0,
@@ -91,7 +91,7 @@ function Tints.Layout(self)
 
 	local tVertices	= { }
 	local iSpace	= 5
-	local iSlices	= self.iSlices
+	local iSlices	= self.iSlices + 1			-- count the original colour too
 	local iTopX		= self.iTopX + iSpace
 	local iTopY		= self.iTopY + iSpace
 	local iSizeX	= ((self.iSizeX - (iSpace * 2)) / iSlices)
