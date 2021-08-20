@@ -58,8 +58,8 @@ local m_tDefWinProp =
 local m_tSizes =
 {
 	iPyramid	= 300,
-	iPalette	= 125,
-	iTints		= 35,
+	iPalette	= 150,
+	iTints		= 50,
 	iRadius		= 150,
 }
 
@@ -168,7 +168,7 @@ end
 -- when a new background color is selected
 --
 local function OnBackColourChanged(inColour, inFunction)
---	m_logger:line("OnBackColourChanged")	
+--	m_logger:line("OnBackColourChanged")
 	
 	if not inColour then return end
 	m_trace:line("Current background: " .. inColour:toString())
@@ -203,15 +203,26 @@ end
 -- allows selection but dows not propagate it
 --
 local function OnEditLock()
-	
+--	m_logger:line("OnEditLock")
+
+	-- toggle state
+	--
 	m_App.bLocked = not m_App.bLocked
+
+	-- set a check mark in the related menu
+	--
+	local hMenu = m_Mainframe.hWindow:GetMenuBar()
+	local iItem = hMenu:FindMenuItem("Edit", "Lock")
+
+	if 0 < iItem then hMenu:Check(iItem, m_App.bLocked) end
 end
 
 -- ----------------------------------------------------------------------------
 -- 
 --
 local function OnEditProximi()
-	
+--	m_logger:line("OnEditProximi")
+
 	local tResult = m_App.tForeColour:proximi(120.0)
 	local bLocked = m_App.bLocked
 	
@@ -227,7 +238,8 @@ end
 -- 
 --
 local function OnEditTertii()
-	
+--	m_logger:line("OnEditTertii")
+
 	local tResult = m_App.tForeColour:proximi(60.0)
 	
 	m_App.bLocked = false
@@ -327,17 +339,17 @@ local function OnSize(event)
 
 	local iRadius	= m_tSizes.iRadius
 	local iDiameter = iRadius * 2
-	local iSpace	= (sizeWin:GetWidth() - (iDiameter * 3)) / 4
+	local iSpace	= _floor((sizeWin:GetWidth() - (iDiameter * 3)) / 4)
 	local iOffset	= iSpace + iRadius
 	
 	for i, pyramid in next, m_App.tControls do
 		
-		pyramid:SetOrigin((iSpace + iDiameter) * (i - 1) + iOffset, m_tSizes.iPyramid)
+		pyramid:SetOrigin((iSpace + iDiameter) * (i - 1) + iOffset, m_tSizes.iPalette + iRadius + 10)
 	end
 
 	m_App.tPalette:SetSize(sizeWin:GetWidth(), m_tSizes.iPalette)
-	m_App.tTints:SetSize(sizeWin:GetWidth(), m_tSizes.iTints)
 	
+	m_App.tTints:SetSize(sizeWin:GetWidth(), m_tSizes.iTints)
 	m_App.tTints:SetTopLeft(0, sizeWin:GetHeight() - m_tSizes.iTints - 10)
 
 	event:Skip()	-- let the event fall through
@@ -402,7 +414,7 @@ local function CreateMainFrame(inAppTitle)
 	mnuFile:Append(wx.wxID_EXIT,    "E&xit\tAlt-X",		"Quit the program")
 	
 	local mnuEdit = wx.wxMenu("", wx.wxMENU_TEAROFF)
-	mnuEdit:Append(rcMnuEdLock, 	"Lock\tCtrl-L",		"Locks current color palette")
+	mnuEdit:Append(rcMnuEdLock, 	"Lock\tCtrl-L",		"Locks current color palette", wx.wxITEM_CHECK)
 	mnuFile:AppendSeparator()
 	mnuEdit:Append(rcMnuEdProximi,	"Proximi\tCtrl-1",	"Proximi colours")
 	mnuEdit:Append(rcMnuEdTertii,	"Tertii\tCtrl-2",	"Tertii colours")
