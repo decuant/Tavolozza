@@ -167,23 +167,18 @@ end
 function Canvas.CreateGDIObjs(self)
 --	m_trace:line("Canvas.CreateGDIObjs")
 
-	local tColours		= self.tColours
-	local tBackground	= _wxColour(tColours.clrBackground)
-	local tForeground	= _wxColour(tColours.clrForeground)
+	local tColours	= self.tColours
+	local clrBack	= _wxColour(tColours.clrBackground)
+	local clrFore	= _wxColour(tColours.clrForeground)
 	
 	-- when creating a pen wider than 2 wxWidgets will try to round it
 	-- thus showing a little line at both ends when set at 3 pixels wide.
 	-- with CAP_BUTT wxWidgets will square the end
 	--
-	self.penDefault	= wx.wxPen(tForeground, 1, wx.wxSOLID)
+	self.penDefault	= wx.wxPen(clrFore, 1, wx.wxSOLID)
 	self.penDefault:SetCap(wx.wxCAP_BUTT)
 
-	self.brushBack	= wx.wxBrush(tBackground, wx.wxSOLID)
-	
---	self.fntDefault = wx.wxFont( self.iFntSize,
---								 wx.wxFONTFAMILY_DEFAULT, wx.wxFONTSTYLE_NORMAL,
---								 wx.wxFONTWEIGHT_BOLD, 
---								 false, self.sFontFace)
+	self.brushBack	= wx.wxBrush(clrBack, wx.wxSOLID)
 end
 
 -- ----------------------------------------------------------------------------
@@ -284,12 +279,9 @@ end
 
 -- ----------------------------------------------------------------------------
 --
-function Canvas.CreateCanvas(self, inOwner, inSizeX, inSizeY)
+function Canvas.CreateCanvas(self, inOwner)
 --	m_trace:line("Canvas.CreateCanvas")
 
-	self.iSizeX = inSizeX
-	self.iSizeY = inSizeY
-	
 	-- create the panel, derived from wxWindow
 	-- deriving from wxPanel raises problems on get focus
 	-- if not using the wxWANTS_CHARS flag won't respond to
@@ -298,7 +290,7 @@ function Canvas.CreateCanvas(self, inOwner, inSizeX, inSizeY)
 	--
 	local hWindow = wx.wxWindow(inOwner, wx.wxID_ANY,
 								wx.wxDefaultPosition, 
-								wx.wxSize(inSizeX, inSizeY),
+								wx.wxDefaultSize,
 								wx.wxWANTS_CHARS)
 
 	-- responds to events

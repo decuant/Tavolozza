@@ -46,7 +46,7 @@ Shape.__index = Shape
 -- ----------------------------------------------------------------------------
 -- objects factory
 --
-function Shape.New(inRadius, inSides, inStep)
+function Shape.New(inRadius, inSides)
 
 	inSides = inSides or 3
 	if 3 > inSides then inSides = 3 end
@@ -153,23 +153,17 @@ end
 -- draw the shape
 --
 function Shape.Draw(self, inDc)
-
-	-- draw the vertices
-	--
-	local tVertices	= self.tVertices
 	
-	inDc:SetPen(m_PenNull)
---	inDc:SetPen(wx.wxPen(_wxColour(self.clrLines), 1, wx.wxSOLID))
---	inDc:DrawLines(tVertices, 0, 0)
---	inDc:SetPen(m_PenNull)
-
+	if not next(self.tColours) then return end
+	
 	-- draw the contents
 	--
-	local tPoints 	= { }
-	local i = 0
+	local tPoints	= {{self.iCenterX, self.iCenterY}}	-- shared vertex
+	local tVertices	= self.tVertices
+	local i			= 0
 	
-	tPoints[1] = {self.iCenterX, self.iCenterY}		-- shared vertex
-
+	inDc:SetPen(m_PenNull)
+	
 	for i, colour in next, self.tColours do
 		
 		if (i + 1) > #tVertices then break end

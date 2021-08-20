@@ -23,12 +23,6 @@ local m_PenNull	= wx.wxPen(_wxColour(_colours.Gray0), 1, wx.wxTRANSPARENT)
 local Pyramid	= { }
 Pyramid.__index = Pyramid
 
--- weights and functions for the octagons' sides
---
---local m_tWeights	= { 1.000, 1.000, 1.500, 180.000 }
---local m_fxCompute	= { hsl_con.tints, hsl_con.desaturate, 
---						hsl_con.offset, hsl_con.adjoin }
-
 -- ----------------------------------------------------------------------------
 -- objects factory
 --
@@ -70,7 +64,7 @@ function Pyramid.New(inFunction, inRadius, inOctagons, inOctaSides)
 	
 	for i=1, ret.iMaxOctgn do
 		
-		ret.tOctagons[i] = Shape.New(inRadius - ((i - 1) * iSize), iSides, (i - 1))
+		ret.tOctagons[i] = Shape.New(inRadius - ((i - 1) * iSize), iSides)
 	end
 
 	return ret
@@ -97,7 +91,7 @@ function Pyramid.SetHueOffset(self)
 
 	local clrStart	= self.clrFill
 	local iSides	= self.iOctaSides
-	local iDegStep = (15 / (self.iMaxOctgn * iSides))	-- step in degrees
+	local iDegStep = -1.0 * (15 / (self.iMaxOctgn * iSides))	-- step in degrees
 	
 	-- make tables for each octagon
 	--
@@ -231,6 +225,27 @@ function Pyramid.Draw(self, inDc)
 	for i=1, self.iMaxOctgn do
 		
 		self.tOctagons[i]:Draw(inDc)
+	end
+	
+	if 1 < self.iMaxOctgn then
+		
+		-- draw a trapezoid for highlighting the original colour
+		--
+		local tVerts1 = self.tOctagons[1].tVertices
+		local tVerts2 = self.tOctagons[2].tVertices
+		local tPoints = { }
+		
+		tPoints[#tPoints + 1] = tVerts1[1]
+		tPoints[#tPoints + 1] = tVerts1[2]
+		tPoints[#tPoints + 1] = tVerts2[2]
+		tPoints[#tPoints + 1] = tVerts2[1]
+		tPoints[#tPoints + 1] = tVerts1[1]
+		
+		inDc:SetPen(wx.wxPen(_wxColour(self.clrLines), 3, wx.wxSOLID))
+		
+		inDc:DrawLines(tPoints, 0, 0)
+		
+		inDc:SetPen(m_PenNull)
 	end
 end
 

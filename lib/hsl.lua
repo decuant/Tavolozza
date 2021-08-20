@@ -181,33 +181,46 @@ function HSLColour.hue_offset(self, delta)
 end
 
 -- ----------------------------------------------------------------------------
+-- return the opposite colour
 --
-function HSLColour.complementary(self)
+function HSLColour.antonymum(self)
 	
    return self:hue_offset(180.0)
 end
 
 -- ----------------------------------------------------------------------------
+-- return the shifted colour at 90 degrees in the colours' wheel
 --
-function HSLColour.neighbors(self, inAngle)
+function HSLColour.rectus(self)
 	
-   local angle = inAngle or 30.0
-   
-   return self:hue_offset(angle), self:hue_offset(360.0 - angle)
+   return self:hue_offset(90.0)
 end
 
 -- ----------------------------------------------------------------------------
---
-function HSLColour.triadic(self)
+-- given a colour return 2 colours at "inAngle" offset
+-- (120 - 240 - 360)
+-- 
+function HSLColour.proximi(self, inAngle)
 	
-   return self:neighbors(120.0)
+   local angle = inAngle or 30.0
+   
+   return {self:hue_offset(angle), self:hue_offset(360.0 - angle)}
+end
+
+-- ----------------------------------------------------------------------------
+-- given a colour return the colours' wheel divided by 3
+-- (120 - 240 - 360)
+--
+function HSLColour.tertii(self)
+	
+   return self:proximi(120.0)
 end
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.split_complementary(self, angle)
 	
-   return self:neighbors(180.0 - (angle or 30.0))
+   return self:proximi(180.0 - (angle or 30.0))
 end
 
 -- ----------------------------------------------------------------------------
@@ -292,7 +305,7 @@ function HSLColour.adjoin(self, inSides, inOffset)
 
 	for i=1, iTimes do
 		
-		local a, b = self:neighbors(inOffset / i)
+		local a, b = self:apud(inOffset / i)
 		
 		tList[i] 		= new(a.H, a.S, 0.500)
 		tList[i+iTimes] = new(b.H, b.S, 0.500)

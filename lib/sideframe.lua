@@ -39,6 +39,7 @@ local tCbFunctions =
 --
 local tCbTarget=
 {
+	"Locked",
 	"Window",
 	"Group Box",
 	"Label",
@@ -252,6 +253,10 @@ local function OnCreateSideframe()
 	local hList		= wx.wxListCtrl(hGroup, wx.wxID_ANY, wx.wxPoint(10, 240), wx.wxSize(310, 135), wx.wxLC_LIST)
 	local hTree 	= wx.wxTreeCtrl(hGroup, wx.wxID_ANY, wx.wxPoint(340, 145), wx.wxSize(290, 230))
 	
+	-- select the first
+	--
+	hCombo:SetValue("String A")
+	
 	-- fill the list control with some items
 	--
 	for i=1, 6 do hList:InsertItem(i, "Item " .. i) end
@@ -275,7 +280,8 @@ local function OnCreateSideframe()
 	-- store interesting members
 	--
 	local tTargets = 
-	{ 
+	{
+		nil,
 		frame,
 		hGroup,
 		hLabel,
