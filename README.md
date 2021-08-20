@@ -27,12 +27,12 @@ Choosing a colour (except in Tints) will make it current and new HSL's variation
 
 The controls on the main dialog.
 
-![The actual tavolozza](/doc/Main_Dialog.png)
+![The actual tavolozza](/docs/Main_Dialog.png)
 
 
 The sketch dialog with most used wxWidgets controls.
 
-![The sketch dialog](/doc/Test_Dialog.png)
+![The sketch dialog](/docs/Test_Dialog.png)
 
 
 
