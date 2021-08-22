@@ -8,7 +8,7 @@ local canvfctr 	= require("lib.canvas")
 local rybclr	= require("lib.RYBColours")
 local Pyramid	= require("lib.Pyramid")
 local Palette	= require("lib.Palette")
-local Tints		= require("lib.Tints")
+local Ribbon	= require("lib.Ribbon")
 local SideFrame	= require("lib.sideframe")
 local trace 	= require("lib.trace")
 
@@ -33,10 +33,13 @@ local m_App =
 	bLocked		= false,
 	tPalette	= nil,
 	tControls	= { },
-	tTints		= nil,
+	tRibbon		= nil,
 	
-	tForeColour	= _colours.__Amber,
-	tBackColour	= _colours.Gray0,
+	tForeColour	= _colours.__Magenta,
+	tBackColour	= _colours.__Magenta,
+	
+	tProxIndx	= 60.0,
+	tProxStep	= 60.0,
 }
 
 _G.m_App = m_App						-- make it globally visible
@@ -59,7 +62,7 @@ local m_tSizes =
 {
 	iPyramid	= 300,
 	iPalette	= 150,
-	iTints		= 50,
+	iRibbon		= 40,
 	iRadius		= 150,
 }
 
@@ -69,7 +72,6 @@ local m_Mainframe =
 {
 	hWindow		= nil,					-- main frame
 	hCanvas		= nil,					-- panel
-	
 	tWinProps	= m_tDefWinProp,		-- window layout settings
 }
 
@@ -85,7 +87,7 @@ end
 -- read dialogs' settings from settings file
 --
 local function ReadSettings()
---	m_logger:line("ReadSettings")
+--	m_trace:line("ReadSettings")
 
 	local sFilename = SettingsName()
 
@@ -103,7 +105,7 @@ end
 -- save a table to the settings file
 --
 local function SaveSettings()
---	m_logger:line("SaveSettings")
+--	m_trace:line("SaveSettings")
 
 	local fd = io.open(SettingsName(), "w")
 	if not fd then return end
@@ -133,23 +135,23 @@ end
 -- when a new foreground color is selected
 --
 local function OnForeColourChanged(inColour, inFunction)
---	m_logger:line("OnForeColourChanged")
+--	m_trace:line("OnForeColourChanged")
 
 	if not inColour then return end
 	m_trace:line("Current foreground: " .. inColour:toString())
 
 	if not m_App.bLocked then
 		
-		if "Tints" ~= inFunction then
+		if "Ribbon" ~= inFunction then
 			
-			m_App.tTints:SetColours(inColour:rectus(), inColour)
+			m_App.tRibbon:SetColours(inColour:offset(180.0), inColour)
 		end
 		
 		local tControls = m_App.tControls
 		
 		for i=1, #tControls do
 			
-			tControls[i]:SetColours(inColour:rectus(), inColour)
+			tControls[i]:SetColours(inColour:offset(180.0), inColour)
 		end
 	end
 
@@ -168,26 +170,11 @@ end
 -- when a new background color is selected
 --
 local function OnBackColourChanged(inColour, inFunction)
---	m_logger:line("OnBackColourChanged")
+--	m_trace:line("OnBackColourChanged")
 	
 	if not inColour then return end
 	m_trace:line("Current background: " .. inColour:toString())
 	
-	if not m_App.bLocked then
-		
-		if "Tints" ~= inFunction then
-			
-			m_App.tTints:SetColours(inColour:rectus(), inColour)
-		end
-
-		local tControls = m_App.tControls
-
-		for i=1, #tControls do
-			
-			tControls[i]:SetColours(inColour:rectus(), inColour)
-		end
-	end
-
 	-- update the sketch dialog
 	--
 	m_Sketch.SetIndex(1)					-- make a choice
@@ -203,7 +190,7 @@ end
 -- allows selection but dows not propagate it
 --
 local function OnEditLock()
---	m_logger:line("OnEditLock")
+--	m_trace:line("OnEditLock")
 
 	-- toggle state
 	--
@@ -218,36 +205,42 @@ local function OnEditLock()
 end
 
 -- ----------------------------------------------------------------------------
--- 
+-- alternative background
 --
-local function OnEditProximi()
---	m_logger:line("OnEditProximi")
+local function OnEditAltBack()
+--	m_trace:line("OnEditAltBack")
 
-	local tResult = m_App.tForeColour:proximi(120.0)
 	local bLocked = m_App.bLocked
-	
+
 	m_App.bLocked = false
+
+	-- reset to start
+	--
+	if 360.0 <= m_App.tProxIndx then
+		
+		m_App.tProxIndx = m_App.tProxStep
+	end
+
+	local clrHue = m_App.tForeColour
+
+	clrHue = clrHue:offset(m_App.tProxIndx)
 	
-	OnBackColourChanged(tResult[1], "")
-	OnForeColourChanged(tResult[2], "")
-
-	m_App.bLocked = bLocked
-end
-
--- ----------------------------------------------------------------------------
--- 
---
-local function OnEditTertii()
---	m_logger:line("OnEditTertii")
-
-	local tResult = m_App.tForeColour:proximi(60.0)
+	-- reverse the luminance
+	--
+	if 0.50 < clrHue.L then
 	
-	m_App.bLocked = false
+		clrHue = clrHue:luminance(0.25)
+	else
+		
+		clrHue = clrHue:luminance(0.85)
+	end
 	
-	OnBackColourChanged(tResult[2], "")
-	OnForeColourChanged(tResult[1], "")
+	-- apply and display
+	--
+	OnBackColourChanged(clrHue, "Offset")
 
-	m_App.bLocked = bLocked
+	m_App.tProxIndx = m_App.tProxIndx + m_App.tProxStep
+	m_App.bLocked	= bLocked
 end
 
 -- ----------------------------------------------------------------------------
@@ -272,14 +265,14 @@ end
 -- ----------------------------------------------------------------------------
 --
 local function OnImport()
---	m_logger:line("OnImport")
+--	m_trace:line("OnImport")
 
 end
 
 -- ----------------------------------------------------------------------------
 --
 local function OnSave()
---	m_logger:line("OnSave")
+--	m_trace:line("OnSave")
 
 end
 
@@ -296,7 +289,7 @@ end
 -- called when closing the window
 --
 local function OnCloseMainframe()
---	m_logger:line("OnCloseMainframe")
+--	m_trace:line("OnCloseMainframe")
   
 	if not m_Mainframe.hWindow then return end
 	
@@ -349,8 +342,8 @@ local function OnSize(event)
 
 	m_App.tPalette:SetSize(sizeWin:GetWidth(), m_tSizes.iPalette)
 	
-	m_App.tTints:SetSize(sizeWin:GetWidth(), m_tSizes.iTints)
-	m_App.tTints:SetTopLeft(0, sizeWin:GetHeight() - m_tSizes.iTints - 10)
+	m_App.tRibbon:SetSize(sizeWin:GetWidth(), m_tSizes.iRibbon)
+	m_App.tRibbon:SetTopLeft(0, sizeWin:GetHeight() - m_tSizes.iRibbon - 10)
 
 	event:Skip()	-- let the event fall through
 end
@@ -373,7 +366,7 @@ local function Scale()
 	
 	m_tSizes.iPyramid	= _floor(m_tSizes.iPyramid * dScale)
 	m_tSizes.iPalette	= _floor(m_tSizes.iPalette * dScale)
-	m_tSizes.iTints		= _floor(m_tSizes.iTints   * dScale)
+	m_tSizes.iRibbon		= _floor(m_tSizes.iRibbon   * dScale)
 	m_tSizes.iRadius	= _floor(m_tSizes.iRadius  * dScale)
 end
 
@@ -403,8 +396,7 @@ local function CreateMainFrame(inAppTitle)
 	local rcMnuImportFile	= NewMenuID()
 	local rcMnuSaveFile		= NewMenuID()
 	local rcMnuEdLock		= NewMenuID()
-	local rcMnuEdProximi	= NewMenuID()
-	local rcMnuEdTertii 	= NewMenuID()
+	local rcMnuEdAltBack	= NewMenuID()
 
 	local mnuFile = wx.wxMenu("", wx.wxMENU_TEAROFF)
 
@@ -416,8 +408,7 @@ local function CreateMainFrame(inAppTitle)
 	local mnuEdit = wx.wxMenu("", wx.wxMENU_TEAROFF)
 	mnuEdit:Append(rcMnuEdLock, 	"Lock\tCtrl-L",		"Locks current color palette", wx.wxITEM_CHECK)
 	mnuFile:AppendSeparator()
-	mnuEdit:Append(rcMnuEdProximi,	"Proximi\tCtrl-1",	"Proximi colours")
-	mnuEdit:Append(rcMnuEdTertii,	"Tertii\tCtrl-2",	"Tertii colours")
+	mnuEdit:Append(rcMnuEdAltBack,	"Foreground III\tAlt-Z",	"Proximi colours")
 	
 	local mnuHelp = wx.wxMenu("", wx.wxMENU_TEAROFF)
 	mnuHelp:Append(wx.wxID_ABOUT,    "&About",			"About the application")
@@ -449,8 +440,7 @@ local function CreateMainFrame(inAppTitle)
 	frame:Connect(rcMnuSaveFile,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnSave)
 	
 	frame:Connect(rcMnuEdLock,		wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditLock)
-	frame:Connect(rcMnuEdProximi,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditProximi)
-	frame:Connect(rcMnuEdTertii,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditTertii)
+	frame:Connect(rcMnuEdAltBack,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditAltBack)
 
 	frame:Connect(wx.wxID_EXIT,		wx.wxEVT_COMMAND_MENU_SELECTED, OnCloseMainframe)
 	frame:Connect(wx.wxID_ABOUT,	wx.wxEVT_COMMAND_MENU_SELECTED, OnAbout)
@@ -472,25 +462,21 @@ end
 --
 local function Layout()
 	
-	local palette = Palette.New("Palette", 200, m_tSizes.iPalette)
-	
+	local palette = Palette.new()
+	local ribbon  = Ribbon.new("Luminance")
+
+	-- inFunction, inRadius, inOctagons, inType
 	--
-	-- inTitle, inRadius, inOctagons, inType
-	--
-	local pyramid1 = Pyramid.New("Offset", 		m_tSizes.iRadius, 3, 10)
-	local pyramid2 = Pyramid.New("Saturation",	m_tSizes.iRadius, 3, 4)
-	local pyramid3 = Pyramid.New("Luminance", 	m_tSizes.iRadius, 3, 8)
-	
-	local tints = Tints.New("Tints", 300, m_tSizes.iTints)
-	tints:SetTopLeft(0, 475)
-	
+	local pyramid1 = Pyramid.new("Offset", 		m_tSizes.iRadius, 5, 8)
+	local pyramid2 = Pyramid.new("Saturation",	m_tSizes.iRadius, 3, 6)
+	local pyramid3 = Pyramid.new("Luminance", 	m_tSizes.iRadius, 3, 10)
+
 	m_App.tPalette	= palette
 	m_App.tControls	= {pyramid1, pyramid2, pyramid3}
-	m_App.tTints	= tints
-
+	m_App.tRibbon	= ribbon
 
 	m_Mainframe.hCanvas:AddObject(m_App.tPalette)
-	m_Mainframe.hCanvas:AddObject(m_App.tTints)
+	m_Mainframe.hCanvas:AddObject(m_App.tRibbon)
 	m_Mainframe.hCanvas:AddObject(m_App.tControls[1])
 	m_Mainframe.hCanvas:AddObject(m_App.tControls[2])
 	m_Mainframe.hCanvas:AddObject(m_App.tControls[3])
