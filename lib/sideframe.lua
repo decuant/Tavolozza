@@ -8,6 +8,8 @@ local rybclr	= require("lib.RYBColours")
 local trace 	= require("lib.trace")
 
 local _frmt		= string.format
+local _byte		= string.byte
+local _char		= string.char
 local _colours	= rybclr.tColours
 
 -- ----------------------------------------------------------------------------
@@ -259,13 +261,20 @@ local function OnCreateSideframe()
 	
 	-- fill the list control with some items
 	--
-	for i=1, 6 do hList:InsertItem(i, "Item " .. i) end
+	for i=1, 10 do hList:InsertItem(i, "Item " .. i) end
 
 	-- fill the tree control with some items
 	--
-	local root = hTree:AddRoot("Root")
-	for i=1, 5 do hTree:InsertItem(root, root, "Leaf " .. i) end
-	hTree:ExpandAllChildren(root)
+	local root = hTree:AddRoot("Index")
+	
+	for i=1, 3 do
+		
+		local chIndx = _char((_byte('A') + i - 1))
+		local rootx = hTree:InsertItem(root, root, "List " .. chIndx)
+		for i=1, 4 do hTree:InsertItem(rootx, rootx, chIndx .. " " .. i) end
+	end
+
+	hTree:Expand(root)
 
 	-- assign event handlers for this frame
 	--

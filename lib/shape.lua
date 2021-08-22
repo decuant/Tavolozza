@@ -46,7 +46,7 @@ Shape.__index = Shape
 -- ----------------------------------------------------------------------------
 -- objects factory
 --
-function Shape.New(inRadius, inSides)
+function Shape.new(inRadius, inSides)
 
 	inSides = inSides or 3
 	if 3 > inSides then inSides = 3 end

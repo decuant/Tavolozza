@@ -175,143 +175,106 @@ end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.hue_offset(self, delta)
+function HSLColour.hue(self, inHue)
 	
-   return new((self.H + delta) % 360, self.S, self.L)
-end
-
--- ----------------------------------------------------------------------------
--- return the opposite colour
---
-function HSLColour.antonymum(self)
-	
-   return self:hue_offset(180.0)
-end
-
--- ----------------------------------------------------------------------------
--- return the shifted colour at 90 degrees in the colours' wheel
---
-function HSLColour.rectus(self)
-	
-   return self:hue_offset(90.0)
-end
-
--- ----------------------------------------------------------------------------
--- given a colour return 2 colours at "inAngle" offset
--- (120 - 240 - 360)
--- 
-function HSLColour.proximi(self, inAngle)
-	
-   local angle = inAngle or 30.0
-   
-   return {self:hue_offset(angle), self:hue_offset(360.0 - angle)}
-end
-
--- ----------------------------------------------------------------------------
--- given a colour return the colours' wheel divided by 3
--- (120 - 240 - 360)
---
-function HSLColour.tertii(self)
-	
-   return self:proximi(120.0)
+   return new(inHue % 360, self.S, self.L)
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.split_complementary(self, angle)
+function HSLColour.offset(self, inOffset)
 	
-   return self:proximi(180.0 - (angle or 30.0))
+   return new((self.H + inOffset) % 360, self.S, self.L)
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.desaturate_to(self, saturation)
+function HSLColour.saturation(self, saturation)
 	
    return new(self.H, saturation, self.L)
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.desaturate_by(self, r)
+function HSLColour.saturate(self, infraction)
 	
-   return new(self.H, self.S * r, self.L)
+   return new(self.H, self.S * infraction, self.L)
 end	 
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.lighten_to(self, lightness)
+function HSLColour.luminance(self, lightness)
 	
    return new(self.H, self.S, lightness)
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.variations(self, fx, iSides)
+function HSLColour.lighten(self, infraction)
 	
-	iSides = iSides or 5
-	
-	local tVariations = { }
-
-	for i=1, iSides do
-		
-		_insert(tVariations, fx(self, i, iSides))
-	end
-
-	return tVariations
+   return new(self.H, self.S, self.L * infraction)
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.tints(self, inSides, inOffset)
+function HSLColour.stepping(self, inSides, inTarget)
 	
-	local function fx(color, i, inSides)
+	local tStepping	 = { }
+	local dStep		 = (inTarget - self.H) / inSides
+	local dHue		 = inTarget
+
+	for i=1, inSides do
 		
-		return color:lighten_to(color.L + (inOffset / i))
+		tStepping[i]  = self:hue(dHue)
+		dHue = dHue - dStep
 	end
 
-	return self:variations(fx, inSides)
+	return tStepping
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.desaturate(self, inSides, inOffset)
+function HSLColour.vivid(self, inSides, inTarget)
 	
-	local function fx(color, i, inSides)
+	local tVivid = { }
+	local dStep  = (inTarget - self.S) / inSides
+	local dSatur = inTarget
+
+	for i=1, inSides do
 		
-		return color:desaturate_to(inOffset / i)
+		tVivid[i]  = self:saturation(dSatur)
+		dSatur = dSatur - dStep
+		
+--		if 0.0 > dSatur then dSatur = 0.00 end
+--		if inTarget < dSatur then dSatur = inTarget end
 	end
 
-	return self:variations(fx, inSides)
+	return tVivid
 end
 
 -- ----------------------------------------------------------------------------
 --
-function HSLColour.offset(self, inSides, inOffset)
+function HSLColour.tints(self, inSides, inTarget)
 	
-	local function fx(color, i, inSides)
+	local tTints = { }
+	local dStep	 = (inTarget - self.L) / inSides
+	local dLuma  = inTarget
+
+	for i=1, inSides do
 		
-		return color:hue_offset(inOffset * i)
+		tTints[i]  = self:luminance(dLuma)
+		dLuma = dLuma - dStep
+		
+--		if 0.0 > dLuma then dLuma = 0.00 end
+--		if inTarget < dLuma then dLuma = inTarget end
+
+		if 0.0 < dStep and inTarget < dLuma then 
+			
+			dLuma = inTarget
+		end
 	end
 
-	return self:variations(fx, inSides)
-end
-
--- ----------------------------------------------------------------------------
---
-function HSLColour.adjoin(self, inSides, inOffset)
-
-	local tList  = { }
-	local iTimes = inSides / 2 
-
-	for i=1, iTimes do
-		
-		local a, b = self:apud(inOffset / i)
-		
-		tList[i] 		= new(a.H, a.S, 0.500)
-		tList[i+iTimes] = new(b.H, b.S, 0.500)
-	end
-	
-	return tList
+	return tTints
 end
 
 -- ----------------------------------------------------------------------------

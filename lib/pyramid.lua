@@ -26,7 +26,7 @@ Pyramid.__index = Pyramid
 -- ----------------------------------------------------------------------------
 -- objects factory
 --
-function Pyramid.New(inFunction, inRadius, inOctagons, inOctaSides)
+function Pyramid.new(inFunction, inRadius, inOctagons, inOctaSides)
 
 	inRadius = inRadius or 10
 	if 0 > inRadius then inRadius = 10 end
@@ -64,7 +64,7 @@ function Pyramid.New(inFunction, inRadius, inOctagons, inOctaSides)
 	
 	for i=1, ret.iMaxOctgn do
 		
-		ret.tOctagons[i] = Shape.New(inRadius - ((i - 1) * iSize), iSides)
+		ret.tOctagons[i] = Shape.new(inRadius - ((i - 1) * iSize), iSides)
 	end
 
 	return ret
@@ -91,7 +91,7 @@ function Pyramid.SetHueOffset(self)
 
 	local clrStart	= self.clrFill
 	local iSides	= self.iOctaSides
-	local iDegStep = -1.0 * (15 / (self.iMaxOctgn * iSides))	-- step in degrees
+	local dDegStep = 60.0 / (self.iMaxOctgn * iSides)	-- step in degrees
 	
 	-- make tables for each octagon
 	--
@@ -103,7 +103,7 @@ function Pyramid.SetHueOffset(self)
 			
 			tColours[j] = clrStart
 			
-			clrStart = clrStart:hue_offset(j * iDegStep)
+			clrStart = clrStart:offset(dDegStep)
 		end
 		
 		self.tOctagons[i].tColours = tColours
@@ -115,9 +115,9 @@ end
 --
 function Pyramid.SetSaturation(self)
 
-	local clrStart	= self.clrFill
-	local iSides	= self.iOctaSides
-	
+	local color  = self.clrFill
+	local iSides = self.iOctaSides
+
 	-- make tables for each octagon
 	--
 	for i=1, self.iMaxOctgn do
@@ -126,11 +126,13 @@ function Pyramid.SetSaturation(self)
 		
 		for j=1, iSides do
 			
-			tColours[j] = clrStart
+			tColours[j] = color
 			
-			clrStart = clrStart:desaturate_by(0.975)
+			color = color:saturate(0.75)
 		end
 		
+		-- assign the table
+		--
 		self.tOctagons[i].tColours = tColours
 	end
 end
@@ -140,9 +142,9 @@ end
 --
 function Pyramid.SetLuminance(self)
 
-	local clrStart	= self.clrFill
-	local iSides	= self.iOctaSides
-	
+	local color  = self.clrFill
+	local iSides = self.iOctaSides
+
 	-- make tables for each octagon
 	--
 	for i=1, self.iMaxOctgn do
@@ -151,11 +153,13 @@ function Pyramid.SetLuminance(self)
 		
 		for j=1, iSides do
 			
-			tColours[j] = clrStart
+			tColours[j] = color
 			
-			clrStart = clrStart:lighten_to(clrStart.L + 0.0100)
+			color = color:lighten(1.0125)
 		end
 		
+		-- assign the table
+		--
 		self.tOctagons[i].tColours = tColours
 	end
 end

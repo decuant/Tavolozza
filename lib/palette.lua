@@ -39,11 +39,11 @@ Palette.__index = Palette
 -- ----------------------------------------------------------------------------
 -- objects factory
 --
-function Palette.New(inFunction)
+function Palette.new()
 
 	local t =
 	{
-		sFunction	= inFunction or "Palette",
+		sFunction	= "Palette",
 		iTopX		= 0,
 		iTopY		= 0,
 		dSizeX		= 100,
