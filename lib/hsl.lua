@@ -3,6 +3,7 @@
 *
 *   .
 ]]
+
 local trace 	= require("lib.trace")
 
 local _min		= math.min
@@ -16,37 +17,6 @@ local _frmt		= string.format
 --
 local m_trace = trace.new("wxHSL")
 m_trace:enable(true)
-
--------------------------------------------------------------------------------
---
-local HSLColour	 = {}
-HSLColour.__index = HSLColour
-
--- ----------------------------------------------------------------------------
---
-local function new(inHue, inSat, inLum)
-
-	inHue = inHue or 0.000
-	inSat = inSat or 0.000
-	inLum = inLum or 0.000
-	
-	if 0.000 > inHue then inHue = 0.000 end
-	if 0.000 > inSat then inSat = 0.000 end
-	if 0.000 > inLum then inLum = 0.000 end
-	
-	if 360.000 < inHue then	inHue = 360.000 end
-	if   1.000 < inSat then inSat =   1.000 end
-	if   1.000 < inLum then inLum =   1.000 end
-	
-	local t =
-	{
-		H = inHue, 
-		S = inSat, 
-		L = inLum,
-	}
-
-	return setmetatable(t, HSLColour)
-end
 
 -- ----------------------------------------------------------------------------
 --
@@ -145,6 +115,45 @@ local function HSLToRGB(inHue, inSaturation, inLuma)
 	return dRed, dGreen, dBlue
 end
 
+-------------------------------------------------------------------------------
+--
+local HSLColour	 	= {}
+HSLColour.__index	= HSLColour
+HSLColour.__eq		= HSLColour.equal
+
+-- ----------------------------------------------------------------------------
+--
+function HSLColour.new(inHue, inSat, inLum)
+
+	inHue = inHue or 0.000
+	inSat = inSat or 0.000
+	inLum = inLum or 0.000
+	
+	if 0.000 > inHue then inHue = 0.000 end
+	if 0.000 > inSat then inSat = 0.000 end
+	if 0.000 > inLum then inLum = 0.000 end
+	
+	if 360.000 < inHue then	inHue = 360.000 end
+	if   1.000 < inSat then inSat =   1.000 end
+	if   1.000 < inLum then inLum =   1.000 end
+	
+	local t =
+	{
+		H = inHue, 
+		S = inSat, 
+		L = inLum,
+	}
+
+	return setmetatable(t, HSLColour)
+end
+
+-- ----------------------------------------------------------------------------
+--
+function HSLColour.equal(self, b)
+
+	return (self.H == b.H) and (self.S == b.S) and (self.L == b.L)
+end
+
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.toString(self)
@@ -156,14 +165,14 @@ end
 --
 function HSLColour.fromHSL(h, s, l)
 
-	return new(h, s, l)
+	return HSLColour.new(h, s, l)
 end
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.fromRGB(r, g, b)
 
-	return new(RGBToHSL(r, g, b))
+	return HSLColour.new(RGBToHSL(r, g, b))
 end
 
 -- ----------------------------------------------------------------------------
@@ -177,42 +186,42 @@ end
 --
 function HSLColour.hue(self, inHue)
 	
-   return new(inHue % 360, self.S, self.L)
+   return HSLColour.new(inHue % 360, self.S, self.L)
 end
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.offset(self, inOffset)
 	
-   return new((self.H + inOffset) % 360, self.S, self.L)
+   return HSLColour.new((self.H + inOffset) % 360, self.S, self.L)
 end
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.saturation(self, saturation)
 	
-   return new(self.H, saturation, self.L)
+   return HSLColour.new(self.H, saturation, self.L)
 end
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.saturate(self, infraction)
 	
-   return new(self.H, self.S * infraction, self.L)
+   return HSLColour.new(self.H, self.S * infraction, self.L)
 end	 
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.luminance(self, lightness)
 	
-   return new(self.H, self.S, lightness)
+   return HSLColour.new(self.H, self.S, lightness)
 end
 
 -- ----------------------------------------------------------------------------
 --
 function HSLColour.lighten(self, infraction)
 	
-   return new(self.H, self.S, self.L * infraction)
+   return HSLColour.new(self.H, self.S, self.L * infraction)
 end
 
 -- ----------------------------------------------------------------------------
@@ -253,6 +262,8 @@ function HSLColour.vivid(self, inSides, inTarget)
 end
 
 -- ----------------------------------------------------------------------------
+-- if inTarget is 0 then processing shades
+-- if inTarget is 1 then processing tints
 --
 function HSLColour.tints(self, inSides, inTarget)
 	

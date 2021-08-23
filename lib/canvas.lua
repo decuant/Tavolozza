@@ -6,14 +6,14 @@
 
 local wx		= require("wx")
 local trace 	= require("lib.trace")
-local palette	= require("lib.RYBColours")
+local rybclr	= require("lib.RYBColours")
 local hsl_con	= require("lib.hsl")
 
 local _insert	= table.insert
 local _remove	= table.remove
 
-local _wxColour	= palette.wxColour
-local _colours	= palette.tColours
+local _wxColour	= rybclr.wxColour
+local _colours	= rybclr.tColours
 
 -- ----------------------------------------------------------------------------
 -- attach tracing to the container
@@ -90,7 +90,7 @@ local tDefColours =
 -- ----------------------------------------------------------------------------
 -- objects factory
 --
-function Canvas.New()
+function Canvas.new()
 
 	local t =
 	{
