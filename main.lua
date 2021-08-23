@@ -4,19 +4,22 @@
 ]]
 
 local wx		= require("wx")
-local canvfctr 	= require("lib.canvas")
+local hsl 		= require("lib.hsl")
 local rybclr	= require("lib.RYBColours")
-local Pyramid	= require("lib.Pyramid")
-local Palette	= require("lib.Palette")
-local Ribbon	= require("lib.Ribbon")
-local SideFrame	= require("lib.sideframe")
+local Canvas 	= require("lib.canvas")
+local Pyramid	= require("lib.pyramid")
+local Palette	= require("lib.palette")
+local Ribbon	= require("lib.ribbon")
+local Sketch	= require("lib.sketch")
+local Stack 	= require("lib.stack")
 local trace 	= require("lib.trace")
 
 local _frmt		= string.format
 local _floor	= math.floor
 
 local _colours	= rybclr.tColours
-local m_Sketch	= SideFrame
+local m_Sketch	= Sketch
+local m_Stack	= Stack
 
 -- ----------------------------------------------------------------------------
 --
@@ -35,7 +38,7 @@ local m_App =
 	tControls	= { },
 	tRibbon		= nil,
 	
-	tForeColour	= _colours.__Magenta,
+	tForeColour	= hsl .fromRGB(0, 255, 0),    -- _colours._Green,
 	tBackColour	= _colours.__Magenta,
 	
 	tProxIndx	= 60.0,
@@ -159,6 +162,8 @@ local function OnForeColourChanged(inColour, inFunction)
 	--
 	m_Sketch.SetIndex(2)					-- make a choice
 	m_Sketch.SetColour(inColour)			-- apply color
+	
+	m_Stack.SetColour(inColour)
 
 	-- store and apply
 	--
@@ -293,7 +298,8 @@ local function OnCloseMainframe()
   
 	if not m_Mainframe.hWindow then return end
 	
-	m_Sketch.CloseSideframe()
+	m_Sketch.CloseSketch()
+	m_Stack.CloseStack()
 
 	-- need to convert from size to pos
 	--
@@ -425,7 +431,7 @@ local function CreateMainFrame(inAppTitle)
 	
 	-- create the canvas
 	--
-	local canvas = canvfctr.New()
+	local canvas = Canvas.new()
 	canvas:CreateCanvas(frame)
 
 	-- assign event handlers for this frame
@@ -468,7 +474,7 @@ local function Layout()
 	-- inFunction, inRadius, inOctagons, inType
 	--
 	local pyramid1 = Pyramid.new("Offset", 		m_tSizes.iRadius, 5, 8)
-	local pyramid2 = Pyramid.new("Saturation",	m_tSizes.iRadius, 3, 6)
+	local pyramid2 = Pyramid.new("Saturation",	m_tSizes.iRadius, 2, 6)
 	local pyramid3 = Pyramid.new("Luminance", 	m_tSizes.iRadius, 3, 10)
 
 	m_App.tPalette	= palette
@@ -496,12 +502,15 @@ local function RunApplication()
 
 	wx.wxGetApp():SetAppName(sAppTitle)
 
-	if CreateMainFrame(sAppTitle) and m_Sketch.CreateSideframe() then
+	if CreateMainFrame(sAppTitle) 	and 
+	   m_Sketch.CreateSketch()		and
+	   m_Stack.CreateStack() 		then
 		
 		Layout()
 		
 		m_Mainframe.hWindow:Show(true)
 		m_Sketch.hWindow:Show(true)
+		m_Stack.hWindow:Show(true)
 		
 		OnBackColourChanged(m_App.tBackColour)
 		OnForeColourChanged(m_App.tForeColour)		
