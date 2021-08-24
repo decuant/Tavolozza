@@ -38,12 +38,17 @@ The sketch dialog with most used wxWidgets controls.
 ![The sketch dialog](/docs/Test_Dialog.png)
 
 
-The stack dialog with colour armonies for the current colour selected.
+The stack dialog with colour armonies for the current colour selected. This is the outcome by column:
+
+- 150	-- split-complementary left
+- 120	-- triadic left
+-  30	-- analogous left
+-   0	-- original
 
 ![The stack dialog](/docs/Stack_Dialog.png)
 
 
-The scope dialog with suitable background colours for the current foreground.
+The scope dialog with suitable background colours for the current foreground. The current colour is offseted by 60 degrees and made brighter or darker depending on the colour's own luminance.
 
 ![The scope dialog](/docs/Scope_Dialog.png)
 
