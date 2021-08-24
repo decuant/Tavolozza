@@ -1,7 +1,7 @@
 --[[
-*	Stack.lua
+*	Scope.lua
 *
-*	Display geometric colours relative to foregound colour.
+*	Display alternative backgrounds for the foreground colour selected.
 ]]
 
 local wx		= require("wx")
@@ -37,15 +37,14 @@ local m_tDefWinProp =
 local m_Columns =
 {
 	iColSize = 75,
-	tAngles  = 
+	tLabels  =
 	{	
-		150, 			-- split-complementary l.
-		120, 			-- triadic l.
-		30, 			-- analogous l.
-		0, 				-- original
-		330, 			-- analogous r.
-		240, 			-- triadic r.
-		210,			-- split-complementary r.
+		"F.", 			-- the actual foreground colour
+		"60", 			-- triadic l.
+		"120", 			-- analogous l.
+		"180", 				-- original
+		"240", 			-- analogous r.
+		"300", 			-- triadic r.
 	},
 }
 
@@ -53,7 +52,7 @@ local m_Columns =
 --
 local iMaxArray = 15
 
-local m_Stack =
+local m_Scope =
 {
 	hWindow		= nil,					-- main frame
 	tWinProps	= m_tDefWinProp,		-- window layout settings
@@ -70,7 +69,7 @@ local m_Stack =
 --
 local function SettingsName()
 	
-	return "stack@" .. wx.wxGetHostName() .. ".ini"
+	return "scope@" .. wx.wxGetHostName() .. ".ini"
 end
 
 -- ----------------------------------------------------------------------------
@@ -88,7 +87,7 @@ local function ReadSettings()
 
 	local tSettings = dofile(sFilename)
 
-	if tSettings then m_Stack.tWinProps = tSettings end
+	if tSettings then m_Scope.tWinProps = tSettings end
 end
 
 -- ----------------------------------------------------------------------------
@@ -102,7 +101,7 @@ local function SaveSettings()
 
 	fd:write("local window_ini =\n{\n")
 
-	local tWinProps = m_Stack.tWinProps
+	local tWinProps = m_Scope.tWinProps
 	local sLine
 
 	sLine = _frmt("\twindow_xy\t= {%d, %d},\n", tWinProps.window_xy[1], tWinProps.window_xy[2])
@@ -121,15 +120,15 @@ end
 -- ----------------------------------------------------------------------------
 -- called when closing the window
 --
-local function OnCloseStack()
---	m_logger:line("OnCloseStack")
+local function OnCloseScope()
+--	m_logger:line("OnCloseScope")
   
-	if not m_Stack.hWindow then return end
+	if not m_Scope.hWindow then return end
 
 	-- need to convert from size to pos
 	--
-	local pos  = m_Stack.hWindow:GetPosition()
-	local size = m_Stack.hWindow:GetSize()
+	local pos  = m_Scope.hWindow:GetPosition()
+	local size = m_Scope.hWindow:GetSize()
 	
 	-- update the current settings
 	--
@@ -137,14 +136,14 @@ local function OnCloseStack()
 	
 	tWinProps.window_xy = {pos:GetX(), pos:GetY()}
 	tWinProps.window_wh = {size:GetWidth(), size:GetHeight()}
-	tWinProps.use_font	= m_Stack.tWinProps.use_font				-- just copy over
+	tWinProps.use_font	= m_Scope.tWinProps.use_font				-- just copy over
 	
-	m_Stack.tWinProps = tWinProps				-- switch structures
+	m_Scope.tWinProps = tWinProps				-- switch structures
 
 	SaveSettings()								-- write to file
 
-	m_Stack.hWindow.Destroy(m_Stack.hWindow)
-	m_Stack.hWindow = nil
+	m_Scope.hWindow.Destroy(m_Scope.hWindow)
+	m_Scope.hWindow = nil
 end
 
 -- ----------------------------------------------------------------------------
@@ -153,7 +152,7 @@ end
 local function OnCellSelected(event)
 --	m_trace:line("OnCellSelected")
 
-	local hGrid = m_Stack.hGrid
+	local hGrid = m_Scope.hGrid
 	
     local iRow	 = event:GetRow()
     local iCol	 = event:GetCol()
@@ -163,21 +162,21 @@ local function OnCellSelected(event)
 	--
 	aValue = hsl.fromRGB(aValue:Red(), aValue:Green(), aValue:Blue())
 	
---	if 3 == iCol then
+	if 0 == iCol then
 		
-		m_Stack.tLastClr = aValue
-		_G.m_App.ForeColourChanged(aValue, "Stack")
---	else
+		m_Scope.tLastClr = aValue
+		_G.m_App.ForeColourChanged(aValue, "Scope")
+	else
 		
---		_G.m_App.BackColourChanged(aValue, "Stack")
---	end
+		_G.m_App.BackColourChanged(aValue, "Scope")
+	end
 	
 	-- put a mark
 	--
 	hGrid:SetCellTextColour(iRow, iCol, _wxColour(aValue:offset(180)))
 	hGrid:SetCellValue(iRow, iCol, "*")
 end
-
+	
 -- ----------------------------------------------------------------------------
 -- a new colour has been selected, add to the stack
 --
@@ -186,21 +185,21 @@ local function OnSetColour(inColour)
 
 	-- chcek if colour changed
 	--
-	if not m_Stack.tLastClr then
+	if not m_Scope.tLastClr then
 		
-		m_Stack.tLastClr = inColour
+		m_Scope.tLastClr = inColour
 	else
 		
-		if inColour:equal(m_Stack.tLastClr) then return end
+		if inColour:equal(m_Scope.tLastClr) then return end
 	end
 
 	-- check the index
 	--
-	local hGrid	= m_Stack.hGrid
+	local hGrid	= m_Scope.hGrid
 
-	if 0 == m_Stack.iCurrIdx then
+	if 0 == m_Scope.iCurrIdx then
 		
-		m_Stack.iCurrIdx = 1
+		m_Scope.iCurrIdx = 1
 		
 		local iCount = hGrid:GetNumberRows() - 1
 		hGrid:DeleteRows(iCount, iCount)
@@ -209,17 +208,34 @@ local function OnSetColour(inColour)
 
 	-- assign values to current row
 	--
-	m_Stack.iCurrIdx = m_Stack.iCurrIdx - 1
-	m_Stack.tLastClr = inColour
-	
-	local iIdx = m_Stack.iCurrIdx
-	local tOff = m_Columns.tAngles
+	m_Scope.iCurrIdx = m_Scope.iCurrIdx - 1
+	m_Scope.tLastClr = inColour
 
-	for i=1, #tOff do
+	-- first column is the foreground colour
+	--
+	local iIdx = m_Scope.iCurrIdx
+
+	hGrid:SetCellBackgroundColour(iIdx, 0, _wxColour(inColour))
+
+	-- create all backgrounds
+	--
+	for i=1, #m_Columns.tLabels do
 		
-		hGrid:SetCellBackgroundColour(iIdx, i - 1, _wxColour(inColour:offset(tOff[i])))
-	end
+		local clrBack = inColour:offset(i * 60.0)
+		
+		-- reverse the luminance
+		--
+		if 0.50 < clrBack.L then
+		
+			clrBack = clrBack:luminance(0.25)
+		else
+			
+			clrBack = clrBack:luminance(0.85)
+		end
 	
+		hGrid:SetCellBackgroundColour(iIdx, i, _wxColour(clrBack))
+	end
+
 	-- check it visible
 	--
 	if not hGrid:IsVisible(iIdx, 0) then hGrid:MakeCellVisible(iIdx, 0) end
@@ -233,7 +249,7 @@ end
 local function SetGridStyles(inGrid)
 --	m_logger:line("SetGridStyles")
 
-	local tWinProps = m_Stack.tWinProps
+	local tWinProps = m_Scope.tWinProps
 	local iFontSize	= tWinProps.use_font[1]
 	local sFontname	= tWinProps.use_font[2]
 	
@@ -251,17 +267,17 @@ local function SetGridStyles(inGrid)
 	-- properties for columns
 	--
 	local iSize 	= m_Columns.iColSize
-	local tAngles 	= m_Columns.tAngles
+	local tLabels 	= m_Columns.tLabels
 
-	inGrid:CreateGrid(m_Stack.iMaxStack, #tAngles)
+	inGrid:CreateGrid(m_Scope.iMaxStack, #tLabels)
 	inGrid:SetLabelFont(fntLbl)
 	inGrid:SetGridLineColour(_wxColour(_colours.Gray25))
 
-	for i=1, #tAngles do
+	for i=1, #tLabels do
 		
-		inGrid:SetColSize(i - 1, iSize)							-- size
-		inGrid:SetColAttr(i - 1, tAttrs)						-- style
-		inGrid:SetColLabelValue(i - 1, tostring(tAngles[i]))	-- labels
+		inGrid:SetColSize(i - 1, iSize)						-- size
+		inGrid:SetColAttr(i - 1, tAttrs)					-- style
+		inGrid:SetColLabelValue(i - 1, tLabels[i])			-- labels
 	end
 
 	inGrid:DisableDragRowSize()
@@ -273,12 +289,12 @@ end
 -- ----------------------------------------------------------------------------
 -- create a window
 --
-local function OnCreateStack()
---	m_trace:line("OnCreateStack")
+local function OnCreateScope()
+--	m_trace:line("OnCreateScope")
 
 	ReadSettings()
 
-	local tWinProps	= m_Stack.tWinProps
+	local tWinProps	= m_Scope.tWinProps
 	
 	-- create a font
 	--
@@ -299,7 +315,7 @@ local function OnCreateStack()
 
 	-- create the frame
 	--
-	local frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, "Foreground",
+	local frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, "Background",
 							 wx.wxPoint(pos[1], pos[2]), wx.wxSize(size[1], size[2]), dwFrameFlags)
 	frame:SetMinSize(wx.wxSize(300, 250))
 	frame:SetBackgroundStyle(wx.wxBG_STYLE_COLOUR)
@@ -312,16 +328,16 @@ local function OnCreateStack()
 
 	-- assign event handlers for this frame
 	--
---	frame:Connect(wx.wxEVT_SIZE,		 OnSizeStack)
---	frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnCloseStack)
+--	frame:Connect(wx.wxEVT_SIZE,		 OnSizeScope)
+--	frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnCloseScope)
 
 	-- assign an icon to frame
 	--
-	local icon = wx.wxIcon("lib/icons/Stack.ico", wx.wxBITMAP_TYPE_ICO)
+	local icon = wx.wxIcon("lib/icons/Scope.ico", wx.wxBITMAP_TYPE_ICO)
 	frame:SetIcon(icon)
 
-	m_Stack.hWindow	= frame
-	m_Stack.hGrid 	= newGrid
+	m_Scope.hWindow	= frame
+	m_Scope.hGrid 	= newGrid
 	
 	return true
 end
@@ -330,16 +346,16 @@ end
 --
 local function SetupPublic()
 
-	m_Stack.CreateStack	= OnCreateStack
-	m_Stack.CloseStack	= OnCloseStack
-	m_Stack.SetColour	= OnSetColour
+	m_Scope.CreateScope	= OnCreateScope
+	m_Scope.CloseScope	= OnCloseScope
+	m_Scope.SetColour	= OnSetColour
 end
 
 -- ----------------------------------------------------------------------------
 --
 SetupPublic()
 
-return m_Stack
+return m_Scope
 
 -- ----------------------------------------------------------------------------
 -- ----------------------------------------------------------------------------

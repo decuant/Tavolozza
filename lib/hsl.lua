@@ -1,7 +1,9 @@
 --[[
 *	hsl.lua
 *
-*   .
+*   Hue Saturation Luminance.
+*
+*	Truncating digits: floor(inHue * 1e6) / 1e6
 ]]
 
 local trace 	= require("lib.trace")
@@ -119,7 +121,7 @@ end
 --
 local HSLColour	 	= {}
 HSLColour.__index	= HSLColour
-HSLColour.__eq		= HSLColour.equal
+--HSLColour.__eq	= HSLColour.equal
 
 -- ----------------------------------------------------------------------------
 --
@@ -139,7 +141,7 @@ function HSLColour.new(inHue, inSat, inLum)
 	
 	local t =
 	{
-		H = inHue, 
+		H = inHue,
 		S = inSat, 
 		L = inLum,
 	}

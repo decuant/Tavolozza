@@ -1,6 +1,7 @@
 --[[
 *	Sketch.lua
 *
+*	A dialog window with some controls to test appereance of colours together.
 ]]
 
 local wx		= require("wx")
@@ -224,7 +225,7 @@ local function OnCreateSketch()
 
 	-- create the frame
 	--
-	local frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, "Colours sketch",
+	local frame = wx.wxFrame(wx.NULL, wx.wxID_ANY, "Sketch",
 							 wx.wxPoint(pos[1], pos[2]), wx.wxSize(size[1], size[2]), dwFrameFlags)
 	frame:SetMinSize(wx.wxSize(300, 250))
 	frame:SetBackgroundStyle(wx.wxBG_STYLE_COLOUR)
@@ -278,12 +279,12 @@ local function OnCreateSketch()
 
 	-- assign event handlers for this frame
 	--
---	frame:Connect(wx.wxEVT_SIZE,		 OnSizeSideframe)
-	frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnCloseSketch)
+--	frame:Connect(wx.wxEVT_SIZE,		 OnSizeSketch)
+--	frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnCloseSketch)
 
 	-- assign an icon to frame
 	--
-	local icon = wx.wxIcon("lib/icons/Tavolozza.ico", wx.wxBITMAP_TYPE_ICO)
+	local icon = wx.wxIcon("lib/icons/Sketch.ico", wx.wxBITMAP_TYPE_ICO)
 	frame:SetIcon(icon)
 
 	-- store interesting members
@@ -303,9 +304,9 @@ local function OnCreateSketch()
 		hTree,
 	}
 	
-	m_Sketch.hWindow	 = frame
-	m_Sketch.hFunCb	 = hFunCb
-	m_Sketch.hOptCb	 = hOptCb
+	m_Sketch.hWindow  = frame
+	m_Sketch.hFunCb	  = hFunCb
+	m_Sketch.hOptCb	  = hOptCb
 	m_Sketch.tTargets = tTargets
 	
 	return true
