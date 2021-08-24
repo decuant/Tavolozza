@@ -27,6 +27,7 @@ The ribbon at the bottom can be configured to work with either each of HSL, but 
 
 Ribbon colours are fixed, so that the center colour is always the original one.
 
+
 The controls on the main dialog.
 
 ![The actual tavolozza](/docs/Main_Dialog.png)
@@ -37,6 +38,17 @@ The sketch dialog with most used wxWidgets controls.
 ![The sketch dialog](/docs/Test_Dialog.png)
 
 
+The stack dialog with colour armonies for the current colour selected.
+
+![The stack dialog](/docs/Stack_Dialog.png)
+
+
+The scope dialog with suitable background colours for the current foreground.
+
+![The scope dialog](/docs/Scope_Dialog.png)
+
+
+
 
 ## List of changes
 
@@ -45,6 +57,8 @@ The sketch dialog with most used wxWidgets controls.
 ### Rel. 0.0.3
 
 
+- Added scope dialog with background colour armonies.
+- Added stack dialog with foreground colour armonies.
 - Added bounds for ribbon when performing Saturation and Luminance.
 - Scale ratio for palette window (for HDPI and non-HDPI windows).
 - Highlight the default selected colour.
