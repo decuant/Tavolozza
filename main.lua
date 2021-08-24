@@ -12,6 +12,7 @@ local Palette	= require("lib.palette")
 local Ribbon	= require("lib.ribbon")
 local Sketch	= require("lib.sketch")
 local Stack 	= require("lib.stack")
+local Scope 	= require("lib.scope")
 local trace 	= require("lib.trace")
 
 local _frmt		= string.format
@@ -20,6 +21,7 @@ local _floor	= math.floor
 local _colours	= rybclr.tColours
 local m_Sketch	= Sketch
 local m_Stack	= Stack
+local m_Scope	= Scope
 
 -- ----------------------------------------------------------------------------
 --
@@ -38,11 +40,8 @@ local m_App =
 	tControls	= { },
 	tRibbon		= nil,
 	
-	tForeColour	= hsl .fromRGB(0, 255, 0),    -- _colours._Green,
+	tForeColour	= _colours._Green,
 	tBackColour	= _colours.__Magenta,
-	
-	tProxIndx	= 60.0,
-	tProxStep	= 60.0,
 }
 
 _G.m_App = m_App						-- make it globally visible
@@ -163,7 +162,8 @@ local function OnForeColourChanged(inColour, inFunction)
 	m_Sketch.SetIndex(2)					-- make a choice
 	m_Sketch.SetColour(inColour)			-- apply color
 	
-	m_Stack.SetColour(inColour)
+	m_Stack.SetColour(inColour)				-- foreground variations
+	m_Scope.SetColour(inColour)				-- background variations
 
 	-- store and apply
 	--
@@ -207,45 +207,6 @@ local function OnEditLock()
 	local iItem = hMenu:FindMenuItem("Edit", "Lock")
 
 	if 0 < iItem then hMenu:Check(iItem, m_App.bLocked) end
-end
-
--- ----------------------------------------------------------------------------
--- alternative background
---
-local function OnEditAltBack()
---	m_trace:line("OnEditAltBack")
-
-	local bLocked = m_App.bLocked
-
-	m_App.bLocked = false
-
-	-- reset to start
-	--
-	if 360.0 <= m_App.tProxIndx then
-		
-		m_App.tProxIndx = m_App.tProxStep
-	end
-
-	local clrHue = m_App.tForeColour
-
-	clrHue = clrHue:offset(m_App.tProxIndx)
-	
-	-- reverse the luminance
-	--
-	if 0.50 < clrHue.L then
-	
-		clrHue = clrHue:luminance(0.25)
-	else
-		
-		clrHue = clrHue:luminance(0.85)
-	end
-	
-	-- apply and display
-	--
-	OnBackColourChanged(clrHue, "Offset")
-
-	m_App.tProxIndx = m_App.tProxIndx + m_App.tProxStep
-	m_App.bLocked	= bLocked
 end
 
 -- ----------------------------------------------------------------------------
@@ -300,6 +261,7 @@ local function OnCloseMainframe()
 	
 	m_Sketch.CloseSketch()
 	m_Stack.CloseStack()
+	m_Scope.CloseScope()
 
 	-- need to convert from size to pos
 	--
@@ -372,7 +334,7 @@ local function Scale()
 	
 	m_tSizes.iPyramid	= _floor(m_tSizes.iPyramid * dScale)
 	m_tSizes.iPalette	= _floor(m_tSizes.iPalette * dScale)
-	m_tSizes.iRibbon		= _floor(m_tSizes.iRibbon   * dScale)
+	m_tSizes.iRibbon	= _floor(m_tSizes.iRibbon  * dScale)
 	m_tSizes.iRadius	= _floor(m_tSizes.iRadius  * dScale)
 end
 
@@ -413,8 +375,6 @@ local function CreateMainFrame(inAppTitle)
 	
 	local mnuEdit = wx.wxMenu("", wx.wxMENU_TEAROFF)
 	mnuEdit:Append(rcMnuEdLock, 	"Lock\tCtrl-L",		"Locks current color palette", wx.wxITEM_CHECK)
-	mnuFile:AppendSeparator()
-	mnuEdit:Append(rcMnuEdAltBack,	"Foreground III\tAlt-Z",	"Proximi colours")
 	
 	local mnuHelp = wx.wxMenu("", wx.wxMENU_TEAROFF)
 	mnuHelp:Append(wx.wxID_ABOUT,    "&About",			"About the application")
@@ -446,7 +406,6 @@ local function CreateMainFrame(inAppTitle)
 	frame:Connect(rcMnuSaveFile,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnSave)
 	
 	frame:Connect(rcMnuEdLock,		wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditLock)
-	frame:Connect(rcMnuEdAltBack,	wx.wxEVT_COMMAND_MENU_SELECTED,	OnEditAltBack)
 
 	frame:Connect(wx.wxID_EXIT,		wx.wxEVT_COMMAND_MENU_SELECTED, OnCloseMainframe)
 	frame:Connect(wx.wxID_ABOUT,	wx.wxEVT_COMMAND_MENU_SELECTED, OnAbout)
@@ -504,13 +463,15 @@ local function RunApplication()
 
 	if CreateMainFrame(sAppTitle) 	and 
 	   m_Sketch.CreateSketch()		and
-	   m_Stack.CreateStack() 		then
+	   m_Stack.CreateStack() 		and
+	   m_Scope.CreateScope()		then
 		
 		Layout()
 		
 		m_Mainframe.hWindow:Show(true)
 		m_Sketch.hWindow:Show(true)
 		m_Stack.hWindow:Show(true)
+		m_Scope.hWindow:Show(true)
 		
 		OnBackColourChanged(m_App.tBackColour)
 		OnForeColourChanged(m_App.tForeColour)		
@@ -529,7 +490,6 @@ local function SetupPublic()
 
 	m_App.ForeColourChanged = OnForeColourChanged
 	m_App.BackColourChanged = OnBackColourChanged
-
 end
 
 -- ----------------------------------------------------------------------------
